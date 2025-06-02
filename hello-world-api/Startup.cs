@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Http;
 
 namespace hello_world_api
 {
@@ -20,23 +17,32 @@ namespace hello_world_api
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        // Add services to the container
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddControllers(); // Replaces AddMvc()
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        // Configure the HTTP request pipeline
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env) // <- Updated type here
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-            var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-            app.Run($"http://0.0.0.0:{port}");
 
-            app.UseMvc();
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapGet("/", async context =>
+                {
+                    var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+                    await context.Response.WriteAsync($"Hello World running on port {port}!");
+                });
+
+                endpoints.MapControllers(); // for API endpoints if you have any
+            });
         }
     }
 }
